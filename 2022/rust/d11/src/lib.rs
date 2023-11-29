@@ -44,6 +44,19 @@ impl Monkey {
         self.count = self.count + 1;
         (item, next)
     }
+
+    fn process_item2(self: &mut Self, item: u64, magic_number: u64) -> (u64, u64) {
+        let item = self.op(item);
+        let item = item % magic_number;
+        let test = item % self.test == 0;
+        let next = if test {
+            self.true_case
+        } else {
+            self.false_case
+        };
+        self.count = self.count + 1;
+        (item, next)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -255,17 +268,20 @@ pub fn process_part_1(input: &str) -> u64 {
 
 pub fn process_part_2(input: &str) -> u64 {
     let (_, mut monkeys) = parse_input(input).unwrap();
-    let bases = monkeys.iter().map(|m| m.test).collect();
-    let mut monkeys: Vec<Monkey2> = monkeys
-        .iter()
-        .map(|m| Monkey2::from_monkey(m, &bases))
-        .collect();
+    let magic_number = monkeys.iter().map(|m| m.test).product();
+    // The monkey 2 and Nimber stuff is my overengineered solution after I missed the obvious trick
+    // of modding by the product of the test primes. I did eventually get it though
+    // Leaving the Nimber and Monkey2 stuff in for posterity 
+    // let mut monkeys: Vec<Monkey2> = monkeys
+    //     .iter()
+    //     .map(|m| Monkey2::from_monkey(m, &bases))
+    //     .collect();
 
     for _ in 0..10000 {
         for i in 0..monkeys.len() {
             let items = monkeys[i].items.clone();
             for item in items.iter() {
-                let (item, target) = monkeys[i].process_item(item.clone());
+                let (item, target) = monkeys[i].process_item2(item.clone(), magic_number);
                 monkeys[target as usize].items.push(item);
             }
             monkeys[i].items = vec![];
